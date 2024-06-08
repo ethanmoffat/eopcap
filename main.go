@@ -197,7 +197,9 @@ loop:
 				len(dataFromServer)-2, packet.ByteSize(), fmt.Sprintf("%s_%s", family_str, action_str),
 			)
 
-			// dumpPacketData(packet, decoded, "server")
+			if err = dumpPacketData(packet, decoded, "out/server"); err != nil {
+				log.Println("warning: error dumping packet", err)
+			}
 
 			if _, err = clientConn.Write(dataFromServer); err != nil {
 				log.Println("[S->c] error during send ::", err)
@@ -254,7 +256,9 @@ loop:
 				len(dataFromClient)-2, packet.ByteSize(), fmt.Sprintf("%s_%s", family_str, action_str),
 			)
 
-			// dumpPacketData(packet, decoded, "client")
+			if err = dumpPacketData(packet, decoded, "out/client"); err != nil {
+				log.Println("warning: error dumping packet", err)
+			}
 
 			if _, err = serverConn.Write(dataFromClient); err != nil {
 				log.Println("[C->s] error during send ::", err)
@@ -397,7 +401,7 @@ func makePacket(data []byte, is_server bool) (packet eolib_net.Packet, decoded_d
 		}
 	case *eolib_server.ConnectionPlayerServerPacket:
 		sequence = eolib_packet.NewPingSequence(pkt.Seq1, pkt.Seq2)
-		sequencer = eolib_packet.NewPacketSequencer(sequence)
+		sequencer.SetSequenceStart(sequence)
 	case *eolib_server.AccountReplyServerPacket:
 		if pkt.ReplyCode <= 9 {
 			break
@@ -408,6 +412,17 @@ func makePacket(data []byte, is_server bool) (packet eolib_net.Packet, decoded_d
 			sequencer.SetSequenceStart(sequence)
 		}
 	}
+
+	return
+}
+
+func dumpPacketData(packet eolib_net.Packet, decoded []byte, outdir string) (err error) {
+	var model dump.DumpModel
+	if model, err = dump.Convert(decoded, packet); err != nil {
+		return
+	}
+
+	model.Marshal(path.Join(outdir, model.Family+model.Action+".json"))
 
 	return
 }
