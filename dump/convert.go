@@ -63,6 +63,7 @@ func getChildrenFromStruct(reflectValue reflect.Value) (properties []DumpPropert
 			if structFieldValue.Kind() == reflect.Pointer {
 				structFieldValue = structFieldValue.Elem()
 			}
+			dumpProperty.IsInterface = true
 			fallthrough
 		case reflect.Struct:
 			dumpProperty.TypeName = qualifiedName(structFieldValue.Type())
@@ -70,7 +71,7 @@ func getChildrenFromStruct(reflectValue reflect.Value) (properties []DumpPropert
 
 		default:
 			dumpProperty.TypeName = structFieldValue.Type().Name()
-			dumpProperty.Value = stringify(structFieldValue)
+			dumpProperty.Value = fieldValue(structFieldValue)
 		}
 
 		properties = append(properties, dumpProperty)
@@ -79,12 +80,12 @@ func getChildrenFromStruct(reflectValue reflect.Value) (properties []DumpPropert
 	return
 }
 
-func stringify(structFieldValue reflect.Value) string {
+func fieldValue(structFieldValue reflect.Value) any {
 	switch structFieldValue.Kind() {
 	case reflect.Int:
-		return fmt.Sprintf("%d", structFieldValue.Int())
+		return structFieldValue.Int()
 	case reflect.Bool:
-		return fmt.Sprintf("%v", structFieldValue.Bool())
+		return structFieldValue.Bool()
 	case reflect.String:
 		return structFieldValue.String()
 	}
@@ -99,7 +100,7 @@ func toArrayDumpProperty(v reflect.Value) DumpProperty {
 			Children: getChildrenFromStruct(v),
 		}
 	default:
-		return DumpProperty{Value: stringify(v)}
+		return DumpProperty{Value: fieldValue(v)}
 	}
 }
 
