@@ -9,7 +9,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"strings"
+	"path"
 	"sync"
 	"time"
 
@@ -51,56 +51,6 @@ func main() {
 	flag.Parse()
 
 	ctx, cancel := context.WithCancel(context.Background())
-
-	var packet eolib_net.Packet
-	packet = &eolib_client.InitInitClientPacket{
-		Challenge: 1,
-		Version: eolib_net.Version{
-			Major: 2,
-			Minor: 3,
-			Patch: 4,
-		},
-		Hdid: "567890",
-	}
-	writer := eolib_data.NewEoWriter()
-	packet.Serialize(writer)
-	model, _ := dump.Convert(writer.Array(), packet)
-	model.Marshal("test.json")
-
-	packet = &eolib_server.EffectPlayerServerPacket{
-		Effects: []eolib_server.PlayerEffect{
-			{PlayerId: 1, EffectId: 29},
-			{PlayerId: 2, EffectId: 28},
-			{PlayerId: 3, EffectId: 27},
-		},
-	}
-	writer = eolib_data.NewEoWriter()
-	packet.Serialize(writer)
-	model, _ = dump.Convert(writer.Array(), packet)
-	model.Marshal("test2.json")
-
-	packet = &eolib_server.InitInitServerPacket{
-		ReplyCode: eolib_server.InitReply_Banned,
-		ReplyCodeData: &eolib_server.InitInitReplyCodeDataBanned{
-			BanType: eolib_server.InitBan_Temporary,
-			BanTypeData: &eolib_server.InitInitBanTypeDataTemporary{
-				MinutesRemaining: 69,
-			},
-		},
-	}
-	writer = eolib_data.NewEoWriter()
-	packet.Serialize(writer)
-	model, _ = dump.Convert(writer.Array(), packet)
-	model.Marshal("test3.json")
-
-	packet = &eolib_client.RangeRequestClientPacket{
-		PlayerIds:  []int{1, 2, 3, 4, 5},
-		NpcIndexes: []int{6, 7, 8, 9, 0},
-	}
-	writer = eolib_data.NewEoWriter()
-	packet.Serialize(writer)
-	model, _ = dump.Convert(writer.Array(), packet)
-	model.Marshal("test4.json")
 
 	go runProxy(ctx)
 
@@ -243,9 +193,8 @@ loop:
 			family_str, _ := packet.Family().String()
 			action_str, _ := packet.Action().String()
 			log.Printf(
-				"[S->c] length (raw): %5d | length (read): %5d | id: %20s | %s\n",
+				"[S->c] length (raw): %5d | length (read): %5d | id: %20s\n",
 				len(dataFromServer)-2, packet.ByteSize(), fmt.Sprintf("%s_%s", family_str, action_str),
-				writeArray(decoded),
 			)
 
 			// dumpPacketData(packet, decoded, "server")
@@ -301,9 +250,8 @@ loop:
 			family_str, _ := packet.Family().String()
 			action_str, _ := packet.Action().String()
 			log.Printf(
-				"[C->s] length (raw): %5d | length (read): %5d | id: %20s | %s\n",
+				"[C->s] length (raw): %5d | length (read): %5d | id: %20s",
 				len(dataFromClient)-2, packet.ByteSize(), fmt.Sprintf("%s_%s", family_str, action_str),
-				writeArray(decoded),
 			)
 
 			// dumpPacketData(packet, decoded, "client")
@@ -457,23 +405,9 @@ func makePacket(data []byte, is_server bool) (packet eolib_net.Packet, decoded_d
 		switch replyCodeData := pkt.ReplyCodeData.(type) {
 		case *eolib_server.AccountReplyReplyCodeDataDefault:
 			sequence = eolib_packet.NewAccountReplySequence(replyCodeData.SequenceStart)
-			sequencer = eolib_packet.NewPacketSequencer(sequence)
+			sequencer.SetSequenceStart(sequence)
 		}
 	}
 
 	return
-}
-
-func writeArray(data []byte) string {
-	out := strings.Builder{}
-
-	for i := range data {
-		if i > 0 {
-			out.WriteString(" ")
-		}
-
-		out.WriteString(fmt.Sprintf("0x%02X", data[i]))
-	}
-
-	return out.String()
 }
