@@ -34,14 +34,14 @@ type DumpProperty struct {
 	IsInterface bool `json:"-"` // True if this is an interface object.
 }
 
-func (dm *DumpModel) Marshal(filepath string) (err error) {
+func (dm *DumpModel) Marshal(filepath string, overwrite bool) (err error) {
 	parts := strings.Split(filepath, "/")
 	tmpPath := ""
 	for i := range parts {
 		if i != len(parts)-1 {
 			tmpPath = path.Join(tmpPath, parts[i])
-			_, err := os.Stat(tmpPath)
-			if os.IsNotExist(err) {
+			_, tmperr := os.Stat(tmpPath)
+			if os.IsNotExist(tmperr) {
 				os.Mkdir(tmpPath, 0755)
 			}
 		}
@@ -58,6 +58,10 @@ func (dm *DumpModel) Marshal(filepath string) (err error) {
 		}
 	}
 	filepath = strings.Join(interfaces, "_") + ".json"
+
+	if _, tmp_err := os.Stat(filepath); tmp_err == nil && !overwrite {
+		return
+	}
 
 	var f *os.File
 	f, err = os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0644)

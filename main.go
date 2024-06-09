@@ -29,7 +29,8 @@ type Flags struct {
 	TargetHost string
 	TargetPort int
 
-	DataDir string
+	DataDir   string
+	Overwrite bool
 }
 
 var (
@@ -47,7 +48,8 @@ func main() {
 	flag.IntVar(&flags.ListenPort, "P", 8078, "The port to listen on")
 	flag.StringVar(&flags.TargetHost, "h", "eoserv.moffat.io", "The host to connect to")
 	flag.IntVar(&flags.TargetPort, "p", 8078, "The target port to connect to")
-	flag.StringVar(&flags.DataDir, "d", "out", "The data directory to where packets should be logged")
+	flag.StringVar(&flags.DataDir, "d", "out", "The data directory to where packets should be dumped")
+	flag.BoolVar(&flags.Overwrite, "overwrite", false, "Overwrite packet dumps that already exist (default: FALSE)")
 	flag.Parse()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -420,7 +422,7 @@ func dumpPacketData(packet eolib_net.Packet, decoded []byte, outdir string) (err
 		return
 	}
 
-	model.Marshal(path.Join(outdir, model.Family+model.Action+".json"))
+	model.Marshal(path.Join(outdir, model.Family+model.Action+".json"), flags.Overwrite)
 
 	return
 }
