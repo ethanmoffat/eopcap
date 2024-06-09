@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"unicode"
 
 	"github.com/ethanmoffat/eolib-go/v3/protocol/net"
 )
@@ -44,15 +45,13 @@ func getChildrenFromStruct(reflectValue reflect.Value) (properties []DumpPropert
 		}
 
 		dumpProperty := DumpProperty{
-			PropertyName: structField.Name,
+			PropertyName: protocolPropertyName(structField.Name),
 		}
 
 		switch structFieldValue.Kind() {
 		case reflect.Array:
 			fallthrough
 		case reflect.Slice:
-			dumpProperty.PropertyName = structField.Name
-
 			if structField.Type.Elem().Kind() == reflect.Uint8 {
 				dumpProperty.TypeName = "[]byte"
 				dumpProperty.Value = structFieldValue.Bytes()
@@ -135,4 +134,17 @@ func qualifiedName(t reflect.Type) string {
 	} else {
 		return name
 	}
+}
+
+func protocolPropertyName(goProperty string) string {
+	output := strings.Builder{}
+
+	for i, c := range goProperty {
+		if unicode.IsUpper(c) && i > 0 {
+			output.WriteRune('_')
+		}
+		output.WriteRune(unicode.ToLower(c))
+	}
+
+	return output.String()
 }
