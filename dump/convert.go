@@ -52,12 +52,17 @@ func getChildrenFromStruct(reflectValue reflect.Value) (properties []DumpPropert
 			fallthrough
 		case reflect.Slice:
 			dumpProperty.PropertyName = structField.Name
-			dumpProperty.TypeName = "[]" + qualifiedName(structField.Type.Elem())
-			for arrayNdx := 0; arrayNdx < structFieldValue.Len(); arrayNdx++ {
-				nextChild := toArrayDumpProperty(structFieldValue.Index(arrayNdx))
-				dumpProperty.Children = append(dumpProperty.Children, nextChild)
-			}
 
+			if structField.Type.Elem().Kind() == reflect.Uint8 {
+				dumpProperty.TypeName = "[]byte"
+				dumpProperty.Value = structFieldValue.Bytes()
+			} else {
+				dumpProperty.TypeName = "[]" + qualifiedName(structField.Type.Elem())
+				for arrayNdx := 0; arrayNdx < structFieldValue.Len(); arrayNdx++ {
+					nextChild := toArrayDumpProperty(structFieldValue.Index(arrayNdx))
+					dumpProperty.Children = append(dumpProperty.Children, nextChild)
+				}
+			}
 		case reflect.Interface:
 			structFieldValue = structFieldValue.Elem()
 			if structFieldValue.Kind() == reflect.Pointer {
