@@ -71,7 +71,7 @@ func getChildrenFromStruct(reflectValue reflect.Value) (properties []DumpPropert
 
 		default:
 			dumpProperty.TypeName = structFieldValue.Type().Name()
-			dumpProperty.Value = fieldValue(structFieldValue)
+			dumpProperty.Optional, dumpProperty.Value = fieldValue(structFieldValue)
 		}
 
 		properties = append(properties, dumpProperty)
@@ -80,16 +80,29 @@ func getChildrenFromStruct(reflectValue reflect.Value) (properties []DumpPropert
 	return
 }
 
-func fieldValue(structFieldValue reflect.Value) any {
+func fieldValue(structFieldValue reflect.Value) (optional bool, value any) {
+	if structFieldValue.Kind() == reflect.Pointer {
+		optional = true
+		if structFieldValue.IsNil() {
+			value = nil
+			return
+		}
+
+		structFieldValue = structFieldValue.Elem()
+	}
+
 	switch structFieldValue.Kind() {
 	case reflect.Int:
-		return structFieldValue.Int()
+		value = structFieldValue.Int()
 	case reflect.Bool:
-		return structFieldValue.Bool()
+		value = structFieldValue.Bool()
 	case reflect.String:
-		return structFieldValue.String()
+		value = structFieldValue.String()
+	default:
+		value = "<unknown>: " + structFieldValue.Type().Name()
 	}
-	return "<unknown>: " + structFieldValue.Type().Name()
+
+	return
 }
 
 func toArrayDumpProperty(v reflect.Value) DumpProperty {
@@ -100,7 +113,9 @@ func toArrayDumpProperty(v reflect.Value) DumpProperty {
 			Children: getChildrenFromStruct(v),
 		}
 	default:
-		return DumpProperty{Value: fieldValue(v)}
+		dp := DumpProperty{}
+		dp.Optional, dp.Value = fieldValue(v)
+		return dp
 	}
 }
 

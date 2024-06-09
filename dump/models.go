@@ -28,6 +28,7 @@ type DumpProperty struct {
 	TypeName     string         `json:"type,omitempty"`     // The type name of the property of the structure.
 	PropertyName string         `json:"name,omitempty"`     // The name of the property.
 	Value        any            `json:"value,omitempty"`    // The property's value (if not a struct/switch case).
+	Optional     bool           `json:"optional,omitempty"` // Whether the field is optional or not
 	Children     []DumpProperty `json:"children,omitempty"` // The children of the property (if a struct/switch case).
 
 	IsInterface bool `json:"-"` // True if this is an interface object.
