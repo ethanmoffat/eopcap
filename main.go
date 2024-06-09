@@ -330,7 +330,7 @@ loop:
 func makePacket(data []byte, is_server bool) (packet eolib_net.Packet, decoded_data []byte, err error) {
 	dataStart := 2
 	if is_server {
-		if server_encryption_multiple != nil {
+		if server_encryption_multiple != nil && !(data[0] == 255 && data[1] == 255) {
 			decoded_data, _ = eolib_encrypt.SwapMultiples(eolib_encrypt.Deinterleave(eolib_encrypt.FlipMsb(data)), *server_encryption_multiple)
 		} else {
 			decoded_data = data
@@ -383,9 +383,7 @@ func makePacket(data []byte, is_server bool) (packet eolib_net.Packet, decoded_d
 	switch pkt := packet.(type) {
 	case *eolib_server.InitInitServerPacket:
 		if pkt.ReplyCode != eolib_server.InitReply_Ok {
-			replyCodeString, _ := pkt.ReplyCode.String()
-			err = fmt.Errorf("invalid reply code: %s", replyCodeString)
-			return
+			break
 		}
 
 		switch replyCodeData := pkt.ReplyCodeData.(type) {
