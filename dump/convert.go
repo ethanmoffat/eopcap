@@ -63,6 +63,10 @@ func getChildrenFromStruct(reflectValue reflect.Value) (properties []DumpPropert
 				}
 			}
 		case reflect.Interface:
+			if structFieldValue.IsNil() || structFieldValue.Elem().IsNil() {
+				continue
+			}
+
 			structFieldValue = structFieldValue.Elem()
 			if structFieldValue.Kind() == reflect.Pointer {
 				structFieldValue = structFieldValue.Elem()
