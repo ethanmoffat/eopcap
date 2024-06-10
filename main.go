@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -31,6 +32,14 @@ type Flags struct {
 
 	DataDir   string
 	Overwrite bool
+}
+
+type DisconnectError struct {
+	DisconnectPacket eolib_net.Packet
+}
+
+func (de DisconnectError) Error() string {
+	return "the client received a signal from the server that forces it to disconnect"
 }
 
 var (
@@ -186,7 +195,8 @@ loop:
 			}
 
 			packet, decoded, err := makePacket(dataFromServer[2:], true)
-			if err != nil {
+			shouldDisconnect := errors.As(err, &DisconnectError{})
+			if err != nil && !shouldDisconnect {
 				log.Println("[S->c] error creating packet from server data :: ", err)
 				cancel()
 				break loop
@@ -205,6 +215,11 @@ loop:
 
 			if _, err = clientConn.Write(dataFromServer); err != nil {
 				log.Println("[S->c] error during send ::", err)
+				cancel()
+				break loop
+			}
+
+			if shouldDisconnect {
 				cancel()
 				break loop
 			}
@@ -385,6 +400,7 @@ func makePacket(data []byte, is_server bool) (packet eolib_net.Packet, decoded_d
 	switch pkt := packet.(type) {
 	case *eolib_server.InitInitServerPacket:
 		if pkt.ReplyCode != eolib_server.InitReply_Ok {
+			err = DisconnectError{DisconnectPacket: packet}
 			break
 		}
 
@@ -410,6 +426,11 @@ func makePacket(data []byte, is_server bool) (packet eolib_net.Packet, decoded_d
 		case *eolib_server.AccountReplyReplyCodeDataDefault:
 			sequence = eolib_packet.NewAccountReplySequence(replyCodeData.SequenceStart)
 			sequencer.SetSequenceStart(sequence)
+		}
+	case *eolib_server.LoginReplyServerPacket:
+		if pkt.ReplyCode == eolib_server.LoginReply_Banned {
+			err = DisconnectError{DisconnectPacket: packet}
+			break
 		}
 	}
 
