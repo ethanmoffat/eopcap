@@ -79,13 +79,13 @@ func getChildrenFromStruct(reflectValue reflect.Value) (properties []DumpPropert
 
 		case reflect.Pointer:
 			if structFieldValue.IsNil() {
-				dumpProperty.TypeName = structField.Type.Elem().Name()
+				dumpProperty.TypeName = qualifiedName(structField.Type.Elem())
 			} else {
-				dumpProperty.TypeName = structFieldValue.Elem().Type().Name()
+				dumpProperty.TypeName = qualifiedName(structFieldValue.Elem().Type())
 			}
 			dumpProperty.Optional, dumpProperty.Value = fieldValue(structFieldValue)
 		default:
-			dumpProperty.TypeName = structFieldValue.Type().Name()
+			dumpProperty.TypeName = qualifiedName(structFieldValue.Type())
 			dumpProperty.Optional, dumpProperty.Value = fieldValue(structFieldValue)
 		}
 
