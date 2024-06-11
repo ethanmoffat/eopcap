@@ -209,7 +209,7 @@ loop:
 				len(dataFromServer)-2, packet.ByteSize(), fmt.Sprintf("%s_%s", family_str, action_str),
 			)
 
-			if err = dumpPacketData(packet, decoded, "out/server"); err != nil {
+			if err = dumpPacketData(packet, decoded, path.Join(flags.DataDir, "server")); err != nil {
 				log.Println("warning: error dumping packet", err)
 			}
 
@@ -273,7 +273,7 @@ loop:
 				len(dataFromClient)-2, packet.ByteSize(), fmt.Sprintf("%s_%s", family_str, action_str),
 			)
 
-			if err = dumpPacketData(packet, decoded, "out/client"); err != nil {
+			if err = dumpPacketData(packet, decoded, path.Join(flags.DataDir, "client")); err != nil {
 				log.Println("warning: error dumping packet", err)
 			}
 
@@ -391,7 +391,10 @@ func makePacket(data []byte, is_server bool) (packet eolib_net.Packet, decoded_d
 		}
 	}
 
-	dataReader := eolib_data.NewEoReader(decoded_data[dataStart:])
+	// ensure the decoded_data represents *just* the packet's data bytes
+	// this excludes the packet action (byte 0), packet family (byte 1), and sequence bytes for client packets (bytes 2 and maybe 3)
+	decoded_data = decoded_data[dataStart:]
+	dataReader := eolib_data.NewEoReader(decoded_data)
 	if err = packet.Deserialize(dataReader); err != nil {
 		packet = nil
 		return
