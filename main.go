@@ -403,7 +403,9 @@ func makePacket(data []byte, is_server bool) (packet eolib_net.Packet, decoded_d
 	switch pkt := packet.(type) {
 	case *eolib_server.InitInitServerPacket:
 		if pkt.ReplyCode != eolib_server.InitReply_Ok {
-			err = DisconnectError{DisconnectPacket: packet}
+			if pkt.ReplyCode == eolib_server.InitReply_Banned || pkt.ReplyCode == eolib_server.InitReply_OutOfDate {
+				err = DisconnectError{DisconnectPacket: packet}
+			}
 			break
 		}
 
