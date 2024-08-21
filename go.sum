@@ -1,6 +1,6 @@
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
-github.com/ethanmoffat/eolib-go/v3 v3.0.0-rc3 h1:dL/8ZySFuyFomm5bM8NwaYaCEV9JbArZR2XriSqCqbc=
-github.com/ethanmoffat/eolib-go/v3 v3.0.0-rc3/go.mod h1:XWBg5GF0k4ONyD+j5tE4zddAxHieYvlc4aDV8Vin3ho=
+github.com/ethanmoffat/eolib-go/v3 v3.0.0-rc4 h1:5ciSo1kmv1ZppfyhSfWqTvqJjj9dYo5say5s5nGuIFg=
+github.com/ethanmoffat/eolib-go/v3 v3.0.0-rc4/go.mod h1:XWBg5GF0k4ONyD+j5tE4zddAxHieYvlc4aDV8Vin3ho=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 golang.org/x/exp v0.0.0-20240604190554-fc45aab8b7f8 h1:LoYXNGAShUG3m/ehNk4iFctuhGX/+R1ZpfJ4/ia80JM=
